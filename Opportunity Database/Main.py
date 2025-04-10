@@ -1,10 +1,5 @@
 import streamlit as st
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-import io
-import base64
 import sqlite3
-from datetime import datetime
 
 # ----------------------------
 # DATABASE SETUP
@@ -44,35 +39,6 @@ def load_entries():
             "Contact": row[9], "Email": row[10]
         } for row in rows
     ]
-
-def generate_tldr_pdf(data):
-    if not data:
-        return None
-
-    buffer = io.BytesIO()
-    cpdf = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    y = height - 40
-
-    cpdf.setFont("Helvetica-Bold", 16)
-    cpdf.drawString(40, y, "📋 TL;DR of Opportunities")
-    y -= 30
-
-    cpdf.setFont("Helvetica", 12)
-    for entry in data:
-        summary = f"""🔹 [{entry['Type']}] {entry['Opportunity']} by {entry['Organization']}\n📍 {entry['Address']} | 🕒 {entry['Duration']} | ⏰ Reg Deadline: {entry['Deadline']}\n💰 Price: {entry['Price']} | 💼 Salary: {entry['Salary']}\n📞 {entry['Contact']} | 📧 {entry['Email']}"""
-        for line in summary.strip().split('\n'):
-            cpdf.drawString(40, y, line)
-            y -= 18
-            if y < 50:
-                cpdf.showPage()
-                y = height - 40
-                cpdf.setFont("Helvetica", 12)
-        y -= 10
-
-    cpdf.save()
-    buffer.seek(0)
-    return buffer
 
 # ----------------------------
 # STREAMLIT UI
@@ -114,14 +80,5 @@ entries = load_entries()
 if entries:
     st.subheader("📊 Stored Opportunities")
     st.dataframe(entries, use_container_width=True, hide_index=True)
-
-    if st.button("📄 Download TLDR PDF"):
-        pdf_buffer = generate_tldr_pdf(entries)
-        if pdf_buffer:
-            b64 = base64.b64encode(pdf_buffer.read()).decode()
-            href = f'<a href="data:application/octet-stream;base64,{b64}" download="tldr_summary.pdf">📥 Download TLDR PDF</a>'
-            st.markdown(href, unsafe_allow_html=True)
-        else:
-            st.error("No entries to summarize.")
 else:
     st.info("No entries yet. Add one above!")
