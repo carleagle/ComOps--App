@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-from io import BytesIO
 
 # ----------------------------
 # DATABASE SETUP
@@ -20,7 +19,8 @@ CREATE TABLE IF NOT EXISTS opportunities (
     duration TEXT,
     deadline TEXT,
     contact TEXT,
-    email TEXT
+    email TEXT,
+    tldr TEXT
 )''')
 conn.commit()
 
@@ -32,19 +32,19 @@ def save_entry_to_db(entry):
         c.execute("""
             UPDATE opportunities SET
                 type=?, organization=?, opportunity=?, address=?, price=?,
-                salary=?, duration=?, deadline=?, contact=?, email=? 
+                salary=?, duration=?, deadline=?, contact=?, email=?, tldr=? 
             WHERE id=?
         """, (
             entry["Type"], entry["Organization"], entry["Opportunity"], entry["Address"], entry["Price"],
-            entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"], entry["id"]
+            entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"], entry["TLDR"], entry["id"]
         ))
     else:
         c.execute("""
-            INSERT INTO opportunities (type, organization, opportunity, address, price, salary, duration, deadline, contact, email) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO opportunities (type, organization, opportunity, address, price, salary, duration, deadline, contact, email, tldr) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             entry["Type"], entry["Organization"], entry["Opportunity"], entry["Address"], entry["Price"],
-            entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"]
+            entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"], entry["TLDR"]
         ))
     conn.commit()
 
@@ -55,7 +55,7 @@ def load_entries():
         {
             "id": row[0], "Type": row[1], "Organization": row[2], "Opportunity": row[3], "Address": row[4],
             "Price": row[5], "Salary": row[6], "Duration": row[7], "Deadline": row[8],
-            "Contact": row[9], "Email": row[10]
+            "Contact": row[9], "Email": row[10], "TLDR": row[11]
         } for row in rows
     ]
 
@@ -67,7 +67,7 @@ def generate_tldr_text(entry):
 # ----------------------------
 st.set_page_config(page_title="🔐 Admin Opportunity DB", layout="wide")
 st.title("🔐 Admin Opportunity Dashboard")
-st.caption("Admins can add, edit, and generate TLDRs")
+st.caption("Admins can add, edit, generate TLDRs, and modify TLDRs")
 
 entries = load_entries()
 
@@ -94,7 +94,7 @@ with col2:
     
     editing_entry = {
         "id": None, "Type": "Competition", "Organization": "", "Opportunity": "", "Address": "", "Price": "",
-        "Salary": "", "Duration": "", "Deadline": "", "Contact": "", "Email": ""
+        "Salary": "", "Duration": "", "Deadline": "", "Contact": "", "Email": "", "TLDR": ""
     }
     if selected_id != "New Entry":
         selected_id = int(selected_id.split(":")[0])
@@ -114,6 +114,7 @@ with col2:
             deadline = st.text_input("Registration Deadline", value=editing_entry["Deadline"])
             contact = st.text_input("Contact Number", value=editing_entry["Contact"])
             email = st.text_input("Email Address", value=editing_entry["Email"])
+            tldr_text = st.text_area("TLDR", value=editing_entry["TLDR"], height=200)
 
         submitted = st.form_submit_button("Save Entry")
         if submitted:
@@ -124,32 +125,33 @@ with col2:
                     "id": editing_entry["id"],
                     "Type": opportunity_type, "Organization": organization, "Opportunity": opportunity,
                     "Address": address, "Price": price, "Salary": salary, "Duration": duration,
-                    "Deadline": deadline, "Contact": contact, "Email": email
+                    "Deadline": deadline, "Contact": contact, "Email": email, "TLDR": tldr_text
                 }
                 save_entry_to_db(entry)
                 st.success("✅ Entry saved!")
                 st.stop()
 
 # ----------------------------
-# DOWNLOAD INDIVIDUAL TLDR
+# EDIT AND DOWNLOAD TLDR
 # ----------------------------
-st.subheader("📥 Download TLDR for Individual Opportunity")
-selected_tldr_id = st.selectbox("Select an opportunity to download TLDR", ["Select Opportunity"] + [e['Opportunity'] for e in entries], key="tldr_dropdown", index=0)
-
-# Set the dropdown width to match the width of the database list
-dropdown_container = st.container()
-dropdown_container.markdown(
-    """<style> 
-        .stSelectbox { width: 100% !important; }
-    </style>""", unsafe_allow_html=True)
+st.subheader("✏️ Edit TLDR for an Opportunity")
+selected_tldr_id = st.selectbox("Select an opportunity to edit TLDR", ["Select Opportunity"] + [e['Opportunity'] for e in entries], key="tldr_dropdown", index=0)
 
 if selected_tldr_id != "Select Opportunity":
     selected_entry = next(e for e in entries if e['Opportunity'] == selected_tldr_id)
-    tldr_text = generate_tldr_text(selected_entry)
+    current_tldr = selected_entry["TLDR"] or "No TLDR available."
+    
+    edited_tldr = st.text_area("Edit TLDR", current_tldr, height=200)
+    
+    if st.button("Save Edited TLDR"):
+        selected_entry["TLDR"] = edited_tldr
+        save_entry_to_db(selected_entry)
+        st.success("✅ TLDR updated successfully!")
+    
     st.download_button(
-        label="📥 Download TLDR",
-        data=tldr_text,
-        file_name=f"{selected_entry['Opportunity']}_TLDR.txt",
+        label="📥 Download Edited TLDR",
+        data=edited_tldr,
+        file_name=f"{selected_entry['Opportunity']}_edited_TLDR.txt",
         mime="text/plain"
     )
 
