@@ -112,13 +112,16 @@ if entries:
     st.subheader("📊 Stored Opportunities")
     df = pd.DataFrame(entries).drop(columns=["id"])
     
-    # Create a column for the download button per row
-    df['Download TLDR'] = df.apply(lambda row: st.download_button(
-        label="📥 Download TLDR", 
-        data=generate_tldr_text(row), 
-        file_name=f"{row['Opportunity']}_tldr.txt"), axis=1)
-    
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    # Creating a column for the download button per row
+    for idx, row in df.iterrows():
+        with st.expander(f"Opportunity {row['Opportunity']}"):
+            # Generate the TLDR text for the selected row
+            tldr_text = generate_tldr_text(row)
+            st.download_button(
+                label="📥 Download TLDR", 
+                data=tldr_text, 
+                file_name=f"{row['Opportunity']}_tldr.txt"
+            )
 
 else:
     st.info("No entries yet. Add one above!")
