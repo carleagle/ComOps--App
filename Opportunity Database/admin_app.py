@@ -134,7 +134,14 @@ with col2:
 # DOWNLOAD INDIVIDUAL TLDR
 # ----------------------------
 st.subheader("📥 Download TLDR for Individual Opportunity")
-selected_tldr_id = st.selectbox("Select an opportunity to download TLDR", ["Select Opportunity"] + [e['Opportunity'] for e in entries])
+selected_tldr_id = st.selectbox("Select an opportunity to download TLDR", ["Select Opportunity"] + [e['Opportunity'] for e in entries], key="tldr_dropdown", index=0)
+
+# Set the dropdown width to match the width of the database list
+dropdown_container = st.container()
+dropdown_container.markdown(
+    """<style> 
+        .stSelectbox { width: 100% !important; }
+    </style>""", unsafe_allow_html=True)
 
 if selected_tldr_id != "Select Opportunity":
     selected_entry = next(e for e in entries if e['Opportunity'] == selected_tldr_id)
