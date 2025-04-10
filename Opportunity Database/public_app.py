@@ -8,6 +8,24 @@ import pandas as pd
 conn = sqlite3.connect("opportunities.db", check_same_thread=False)
 c = conn.cursor()
 
+# Ensure the table exists (same as in admin_app)
+c.execute('''
+CREATE TABLE IF NOT EXISTS opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    organization TEXT,
+    opportunity TEXT,
+    address TEXT,
+    price TEXT,
+    salary TEXT,
+    duration TEXT,
+    deadline TEXT,
+    contact TEXT,
+    email TEXT
+)
+''')
+conn.commit()
+
 # ----------------------------
 # HELPER FUNCTION TO LOAD ENTRIES
 # ----------------------------
