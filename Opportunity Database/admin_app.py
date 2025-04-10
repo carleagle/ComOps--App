@@ -85,9 +85,9 @@ with col1:
     st.subheader("📊 Stored Opportunities")
     if entries:
         # Creating a list to display the opportunities as a DataFrame with an additional 'Download' column
-        df = pd.DataFrame(entries).drop(columns=["id"])
+        df = pd.DataFrame(entries)
         
-        # Add the download buttons inline
+        # Add the download buttons inline (using the 'id' column)
         df['Download'] = df.apply(lambda row: st.download_button(
             label=f"📥 {row['Opportunity']}",
             data=generate_tldr_text(row),
@@ -95,9 +95,9 @@ with col1:
             mime="text/plain",
             key=f"tldr_{row['id']}"
         ), axis=1)
-        
-        # Displaying the DataFrame with the download buttons in a table format
-        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        # Display the table, but drop the 'id' column for presentation
+        st.dataframe(df.drop(columns=["id"]), use_container_width=True, hide_index=True)
 
         # TLDR Export for All Opportunities
         st.subheader("📝 Export TLDR for All Opportunities")
