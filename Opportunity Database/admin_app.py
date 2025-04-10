@@ -84,38 +84,11 @@ col1, col2 = st.columns([2, 1])  # Left column (Database) is 2x the width of the
 with col1:
     st.subheader("📊 Stored Opportunities")
     if entries:
-        # Creating a list to display the opportunities as a DataFrame with an additional 'Download' column
+        # Creating a list to display the opportunities as a DataFrame without the download button column
         df = pd.DataFrame(entries)
-        
-        # Add the download buttons inline (using the 'id' column)
-        df['Download'] = df.apply(lambda row: st.download_button(
-            label=f"📥 {row['Opportunity']}",
-            data=generate_tldr_text(row),
-            file_name=f"{row['Opportunity']}_tldr.txt",
-            mime="text/plain",
-            key=f"tldr_{row['id']}"
-        ), axis=1)
 
         # Display the table, but drop the 'id' column for presentation
         st.dataframe(df.drop(columns=["id"]), use_container_width=True, hide_index=True)
-
-        # TLDR Export for All Opportunities
-        st.subheader("📝 Export TLDR for All Opportunities")
-        tldr_output = "\n\n".join([generate_tldr_text(e) for e in entries])
-        st.download_button(
-            label="📥 Download All TLDRs (txt)",
-            data=tldr_output,
-            file_name="all_opportunities_tldr.txt",
-            mime="text/plain",
-            key="all_tldr_txt"
-        )
-        st.download_button(
-            label="📥 Download All Opportunities (CSV)",
-            data=save_to_csv(entries),
-            file_name="all_opportunities.csv",
-            mime="text/csv",
-            key="all_csv"
-        )
 
     else:
         st.info("No entries yet. Add one above!")
@@ -162,3 +135,35 @@ with col2:
                 save_entry_to_db(entry)
                 st.success("✅ Entry saved!")
                 st.stop()  # Prevent further execution of the script after saving
+
+# ------------- DOWNLOAD TLDR SECTION -------------------
+st.subheader("📝 Download TLDR")
+
+# Dropdown to select each entry for individual TLDR download
+for entry in entries:
+    with st.expander(f"Download TLDR for {entry['Opportunity']}"):
+        st.download_button(
+            label="📥 Download TLDR",
+            data=generate_tldr_text(entry),
+            file_name=f"{entry['Opportunity']}_tldr.txt",
+            mime="text/plain",
+            key=f"tldr_{entry['id']}"
+        )
+
+# Download All TLDR section
+tldr_output = "\n\n".join([generate_tldr_text(e) for e in entries])
+st.download_button(
+    label="📥 Download All TLDRs (txt)",
+    data=tldr_output,
+    file_name="all_opportunities_tldr.txt",
+    mime="text/plain",
+    key="all_tldr_txt"
+)
+
+st.download_button(
+    label="📥 Download All Opportunities (CSV)",
+    data=save_to_csv(entries),
+    file_name="all_opportunities.csv",
+    mime="text/csv",
+    key="all_csv"
+)
