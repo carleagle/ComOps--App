@@ -51,7 +51,6 @@ def save_entry_to_db(entry):
         ))
     conn.commit()
 
-
 def load_entries():
     c.execute("SELECT * FROM opportunities")
     rows = c.fetchall()
