@@ -73,7 +73,7 @@ st.caption("Admins can add and view opportunities")
 
 entries = load_entries()
 
-# Selection for editing (reverted to just view and add new entry)
+# Selection for adding new entries
 st.subheader("✏️ Add New Opportunity")
 with st.form("opportunity_form"):
     st.subheader("➕ Add Opportunity")
@@ -113,7 +113,10 @@ if entries:
     df = pd.DataFrame(entries).drop(columns=["id"])
     
     # Create a column for the download button per row
-    df['Download TLDR'] = df['Opportunity'].apply(lambda x: st.download_button(label="📥 Download TLDR", data=generate_tldr_text(x), file_name=f"{x}_tldr.txt"))
+    df['Download TLDR'] = df.apply(lambda row: st.download_button(
+        label="📥 Download TLDR", 
+        data=generate_tldr_text(row), 
+        file_name=f"{row['Opportunity']}_tldr.txt"), axis=1)
     
     st.dataframe(df, use_container_width=True, hide_index=True)
 
