@@ -8,9 +8,11 @@ import pandas as pd
 conn = sqlite3.connect("opportunities.db", check_same_thread=False)
 c = conn.cursor()
 
-# Add 'TLDR' column if it doesn't exist
+# Disable foreign key checks temporarily for table modification
+c.execute('PRAGMA foreign_keys=off;')
+
+# Create table if it doesn't exist already
 c.execute('''
-    PRAGMA foreign_keys=off;
     CREATE TABLE IF NOT EXISTS opportunities (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
@@ -24,17 +26,21 @@ c.execute('''
         contact TEXT,
         email TEXT,
         tldr TEXT
-    );
-    PRAGMA foreign_keys=on;
+    )
 ''')
 
-# Ensure the 'TLDR' column exists
+# Enable foreign key checks again after the table is created
+c.execute('PRAGMA foreign_keys=on;')
+
+# Ensure the 'TLDR' column exists, if not add it
 c.execute('PRAGMA table_info(opportunities)')
 columns = [column[1] for column in c.fetchall()]
 if 'tldr' not in columns:
     c.execute('ALTER TABLE opportunities ADD COLUMN tldr TEXT')
 
+# Commit changes
 conn.commit()
+
 
 # ----------------------------
 # HELPER FUNCTIONS
