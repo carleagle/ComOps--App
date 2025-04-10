@@ -62,14 +62,6 @@ def load_entries():
 def generate_tldr_text(entry):
     return f"""📌 {entry['Opportunity']} ({entry['Type']})\n🏢 {entry['Organization']}\n📍 {entry['Address']}\n💰 Price: {entry['Price'] or 'N/A'} | Salary: {entry['Salary'] or 'N/A'}\n🕒 Duration: {entry['Duration']}\n📅 Deadline: {entry['Deadline']}\n📞 {entry['Contact']} | 📧 {entry['Email']}\n"""
 
-def save_to_xlsx(entries):
-    df = pd.DataFrame(entries)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Opportunities')
-        writer.save()
-    return output.getvalue()
-
 def save_to_csv(entries):
     df = pd.DataFrame(entries)
     return df.to_csv(index=False).encode('utf-8')
@@ -123,13 +115,6 @@ with col1:
             file_name="all_opportunities.csv",
             mime="text/csv",
             key="all_csv"  # Unique key for the CSV button
-        )
-        st.download_button(
-            label="📥 Download All Opportunities (XLSX)",
-            data=save_to_xlsx(entries),
-            file_name="all_opportunities.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="all_xlsx"  # Unique key for the XLSX button
         )
 
     else:
