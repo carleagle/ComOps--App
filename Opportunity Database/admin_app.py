@@ -28,7 +28,6 @@ conn.commit()
 # ----------------------------
 def save_entry_to_db(entry):
     if entry.get("id") is not None:
-        # Update existing entry
         c.execute("""
             UPDATE opportunities SET
                 type=?, organization=?, opportunity=?, address=?, price=?,
@@ -39,12 +38,9 @@ def save_entry_to_db(entry):
             entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"], entry["id"]
         ))
     else:
-        # Insert new entry (exclude "id")
         c.execute("""
-            INSERT INTO opportunities (
-                type, organization, opportunity, address, price,
-                salary, duration, deadline, contact, email
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO opportunities (type, organization, opportunity, address, price, salary, duration, deadline, contact, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             entry["Type"], entry["Organization"], entry["Opportunity"], entry["Address"], entry["Price"],
             entry["Salary"], entry["Duration"], entry["Deadline"], entry["Contact"], entry["Email"]
@@ -115,8 +111,8 @@ with st.form("opportunity_form"):
             }
             save_entry_to_db(entry)
             st.success("✅ Entry saved!")
-            st.experimental_rerun()
- 
+            st.stop()
+
 # Show database
 entries = load_entries()
 if entries:
