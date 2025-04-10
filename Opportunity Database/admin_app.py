@@ -96,42 +96,41 @@ with col1:
         st.dataframe(df, use_container_width=True, hide_index=True)
         
         # TLDR Export for Each Item and All Items
-    st.subheader("📝 Export TLDR for Individual Opportunities")
-    for entry in entries:
-        tldr = generate_tldr_text(entry)
+        st.subheader("📝 Export TLDR for Individual Opportunities")
+        for entry in entries:
+            tldr = generate_tldr_text(entry)
+            st.download_button(
+                label=f"📥 Download TLDR for {entry['Opportunity']}",
+                data=tldr,
+                file_name=f"{entry['Opportunity']}_tldr.txt",
+                mime="text/plain",
+                key=f"tldr_{entry['id']}"  # Add a unique key for each button
+            )
+
+        # TLDR Export for All Opportunities
+        st.subheader("📝 Export TLDR for All Opportunities")
+        tldr_output = "\n\n".join([generate_tldr_text(e) for e in entries])
         st.download_button(
-            label=f"📥 Download TLDR for {entry['Opportunity']}",
-            data=tldr,
-            file_name=f"{entry['Opportunity']}_tldr.txt",
+            label="📥 Download All TLDRs (txt)",
+            data=tldr_output,
+            file_name="all_opportunities_tldr.txt",
             mime="text/plain",
-            key=f"tldr_{entry['id']}"  # Add a unique key for each button
+            key="all_tldr_txt"  # Unique key for the "All TLDRs" button
         )
-
-    # TLDR Export for All Opportunities
-    st.subheader("📝 Export TLDR for All Opportunities")
-    tldr_output = "\n\n".join([generate_tldr_text(e) for e in entries])
-    st.download_button(
-        label="📥 Download All TLDRs (txt)",
-        data=tldr_output,
-        file_name="all_opportunities_tldr.txt",
-        mime="text/plain",
-        key="all_tldr_txt"  # Unique key for the "All TLDRs" button
-    )
-    st.download_button(
-        label="📥 Download All Opportunities (CSV)",
-        data=save_to_csv(entries),
-        file_name="all_opportunities.csv",
-        mime="text/csv",
-        key="all_csv"  # Unique key for the CSV button
-    )
-    st.download_button(
-        label="📥 Download All Opportunities (XLSX)",
-        data=save_to_xlsx(entries),
-        file_name="all_opportunities.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        key="all_xlsx"  # Unique key for the XLSX button
-    )
-
+        st.download_button(
+            label="📥 Download All Opportunities (CSV)",
+            data=save_to_csv(entries),
+            file_name="all_opportunities.csv",
+            mime="text/csv",
+            key="all_csv"  # Unique key for the CSV button
+        )
+        st.download_button(
+            label="📥 Download All Opportunities (XLSX)",
+            data=save_to_xlsx(entries),
+            file_name="all_opportunities.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="all_xlsx"  # Unique key for the XLSX button
+        )
 
     else:
         st.info("No entries yet. Add one above!")
@@ -177,4 +176,4 @@ with col2:
                 }
                 save_entry_to_db(entry)
                 st.success("✅ Entry saved!")
-                st.stop()
+                st.stop()  # Prevent further execution of the script after saving
