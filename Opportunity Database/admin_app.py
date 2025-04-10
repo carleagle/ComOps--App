@@ -62,10 +62,6 @@ def load_entries():
 def generate_tldr_text(entry):
     return f"""📌 {entry['Opportunity']} ({entry['Type']})\n🏢 {entry['Organization']}\n📍 {entry['Address']}\n💰 Price: {entry['Price'] or 'N/A'} | Salary: {entry['Salary'] or 'N/A'}\n🕒 Duration: {entry['Duration']}\n📅 Deadline: {entry['Deadline']}\n📞 {entry['Contact']} | 📧 {entry['Email']}\n"""
 
-def save_to_csv(entries):
-    df = pd.DataFrame(entries)
-    return df.to_csv(index=False).encode('utf-8')
-
 # ----------------------------
 # STREAMLIT UI FOR ADMIN
 # ----------------------------
@@ -76,24 +72,22 @@ st.caption("Admins can add, edit, and generate TLDRs")
 entries = load_entries()
 
 # ----------------------------
-# Create Layout with Columns
+# CREATE LAYOUT
 # ----------------------------
-col1, col2 = st.columns([2, 1])  # Left column (Database) is 2x the width of the right column (Form)
 
-# ------------- LEFT SIDE: DATABASE LIST -------------------
+# Left side: Table of Opportunities
+col1, col2 = st.columns([2, 1])  # Left column is 2x the width of the right column (Form)
+
 with col1:
     st.subheader("📊 Stored Opportunities")
     if entries:
-        # Creating a list to display the opportunities as a DataFrame without the download button column
+        # Show the list of opportunities as a DataFrame without the 'id' column for presentation
         df = pd.DataFrame(entries)
-
-        # Display the table, but drop the 'id' column for presentation
         st.dataframe(df.drop(columns=["id"]), use_container_width=True, hide_index=True)
-
     else:
         st.info("No entries yet. Add one above!")
 
-# ------------- RIGHT SIDE: FORM -------------------
+# Right side: Form for Adding/Editing an Opportunity
 with col2:
     st.subheader("✏️ Add or Edit Opportunity")
     selected_id = st.selectbox("Select an opportunity to edit", ["New Entry"] + [f"{e['id']}: {e['Opportunity']}" for e in entries])
@@ -134,36 +128,34 @@ with col2:
                 }
                 save_entry_to_db(entry)
                 st.success("✅ Entry saved!")
-                st.stop()  # Prevent further execution of the script after saving
+                st.stop()
 
-# ------------- DOWNLOAD TLDR SECTION -------------------
-st.subheader("📝 Download TLDR")
+# ----------------------------
+# DOWNLOAD INDIVIDUAL TLDR
+# ----------------------------
+st.subheader("📥 Download TLDR for Individual Opportunity")
+selected_tldr_id = st.selectbox("Select an opportunity to download TLDR", ["Select Opportunity"] + [e['Opportunity'] for e in entries])
 
-# Dropdown to select each entry for individual TLDR download
-for entry in entries:
-    with st.expander(f"Download TLDR for {entry['Opportunity']}"):
-        st.download_button(
-            label="📥 Download TLDR",
-            data=generate_tldr_text(entry),
-            file_name=f"{entry['Opportunity']}_tldr.txt",
-            mime="text/plain",
-            key=f"tldr_{entry['id']}"
-        )
+if selected_tldr_id != "Select Opportunity":
+    selected_entry = next(e for e in entries if e['Opportunity'] == selected_tldr_id)
+    tldr_text = generate_tldr_text(selected_entry)
+    st.download_button(
+        label="📥 Download TLDR",
+        data=tldr_text,
+        file_name=f"{selected_entry['Opportunity']}_TLDR.txt",
+        mime="text/plain"
+    )
 
-# Download All TLDR section
-tldr_output = "\n\n".join([generate_tldr_text(e) for e in entries])
+# ----------------------------
+# DOWNLOAD TLDR FOR ALL
+# ----------------------------
+st.subheader("📥 Download TLDR for All Opportunities")
+
+# Create the text for all opportunities
+tldr_all = "\n\n".join([generate_tldr_text(e) for e in entries])
 st.download_button(
-    label="📥 Download All TLDRs (txt)",
-    data=tldr_output,
+    label="📥 Download All TLDRs",
+    data=tldr_all,
     file_name="all_opportunities_tldr.txt",
-    mime="text/plain",
-    key="all_tldr_txt"
-)
-
-st.download_button(
-    label="📥 Download All Opportunities (CSV)",
-    data=save_to_csv(entries),
-    file_name="all_opportunities.csv",
-    mime="text/csv",
-    key="all_csv"
+    mime="text/plain"
 )
