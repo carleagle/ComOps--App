@@ -116,7 +116,7 @@ with st.form("opportunity_form"):
             save_entry_to_db(entry)
             st.success("✅ Entry saved!")
             st.experimental_rerun()
-
+ 
 # Show database
 entries = load_entries()
 if entries:
